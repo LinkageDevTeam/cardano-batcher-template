@@ -1,0 +1,93 @@
+# Cardano Batcher Template - Docker Compose Configuration
+# 
+# Usage:
+#   docker-compose up -d              # Start the batcher
+#   docker-compose logs -f batcher    # View logs
+#   docker-compose down               # Stop
+#
+# Configuration via environment variables or .env file
+
+version: "3.8"
+
+services:
+  batcher:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cardano-batcher
+    restart: unless-stopped
+    
+    # Command to run the batcher
+    command: >
+      run
+      --script-address ${BATCHER_SCRIPT_ADDRESS}
+      --network ${BATCHER_NETWORK:-preprod}
+      --provider ${BATCHER_NODE_PROVIDER:-blockfrost}
+      --blockfrost-project-id ${BATCHER_BLOCKFROST_PROJECT_ID}
+      --signing-key /app/keys/signing.skey
+      --batch-min ${BATCHER_BATCH_SIZE_MIN:-2}
+      --batch-max ${BATCHER_BATCH_SIZE_MAX:-10}
+      --interval ${BATCHER_BATCH_INTERVAL_SECONDS:-30}
+      --strategy ${BATCHER_STRATEGY:-fifo}
+      --log-level ${BATCHER_LOG_LEVEL:-INFO}
+    
+    environment:
+      - BATCHER_NETWORK=${BATCHER_NETWORK:-preprod}
+      - BATCHER_NODE_PROVIDER=${BATCHER_NODE_PROVIDER:-blockfrost}
+      - BATCHER_BLOCKFROST_PROJECT_ID=${BATCHER_BLOCKFROST_PROJECT_ID}
+      - BATCHER_LOG_LEVEL=${BATCHER_LOG_LEVEL:-INFO}
+      - BATCHER_DATABASE_URL=sqlite+aiosqlite:///app/data/batcher.db
+    
+    volumes:
+      # Persistent data storage
+      - batcher-data:/app/data
+      # Signing key (mount your key file here)
+      - ./keys:/app/keys:ro
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+        reservations:
+          memory: 128M
+          cpus: "0.25"
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "import batcher; print('OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Optional: Ogmios for direct node connection
+  # Uncomment if using Ogmios instead of Blockfrost
+  # ogmios:
+  #   image: cardanosolutions/ogmios:latest
+  #   container_name: cardano-ogmios
+  #   restart: unless-stopped
+  #   command: >
+  #     --host 0.0.0.0
+  #     --node-socket /ipc/node.socket
+  #     --node-config /config/config.json
+  #   ports:
+  #     - "1337:1337"
+  #   volumes:
+  #     - node-ipc:/ipc
+  #     - ./config:/config:ro
+
+volumes:
+  batcher-data:
+    driver: local
+  # node-ipc:
+  #   driver: local
+
