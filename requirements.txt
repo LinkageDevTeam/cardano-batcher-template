@@ -34,3 +34,4 @@ mypy>=1.7.0
 # CBOR handling (for transaction serialization)
 cbor2>=5.5.0
 
+

@@ -366,3 +366,4 @@ class OgmiosAdapter(NodeInterface):
         utxo = await self.get_utxo(tx_hash, output_index)
         return utxo is not None
 
+

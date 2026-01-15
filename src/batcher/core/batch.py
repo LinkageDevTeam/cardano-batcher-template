@@ -193,3 +193,4 @@ class Batch:
     def __repr__(self) -> str:
         return f"Batch(id={self.batch_id[:8]}..., status={self.status.value}, size={self.size})"
 
+

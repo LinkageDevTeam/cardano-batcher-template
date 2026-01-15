@@ -308,3 +308,4 @@ async def init_database(config: Optional[BatcherConfig] = None) -> Database:
     await db.connect()
     return db
 
+

@@ -281,3 +281,4 @@ def test_signer():
     from batcher.tx.signer import TransactionSigner, generate_test_key
     return generate_test_key()
 
+

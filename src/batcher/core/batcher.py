@@ -487,3 +487,4 @@ class Batcher:
         """Register callback for error events."""
         self._on_error = callback
 
+
